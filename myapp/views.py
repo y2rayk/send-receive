@@ -5,9 +5,7 @@ from .serializers import MessageSerializer
 
 
 class MessageViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows users to be viewed or edited.
-    """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ('id', 'seen',)
