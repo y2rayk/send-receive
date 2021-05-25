@@ -3,7 +3,7 @@ Build a service for sending and retrieving messages.
 
 to build:
 ```
-python -m venv venv
+python3 -m venv venv
 . ./venv/bin/activate
 pip install -r requirements.txt
 python manage.py makemigrations
