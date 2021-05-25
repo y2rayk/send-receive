@@ -17,5 +17,5 @@ python manage.py test
 to run server:
 ```
 . ./venv/bin/activate
-python3 manage.py runserver 
+python manage.py runserver 
 ```
