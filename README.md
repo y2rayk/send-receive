@@ -22,3 +22,9 @@ to run server:
 . ./venv/bin/activate
 python manage.py runserver 
 ```
+
+with server running:
+```
+goto http://127.0.0.1:8000/admin to login with admin/admin123
+once logged in, goto http://127.0.0.1:8000/v1/messages to play with the API
+```
