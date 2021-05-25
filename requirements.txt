@@ -1,1 +1,2 @@
 djangorestframework-jsonapi==4.2.0
+django-filter==2.4.0
