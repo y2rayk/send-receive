@@ -102,10 +102,11 @@ class MessageTests(APITestCase):
         response = self.create_message('dont care')
         response = self.create_message('dont care')
         url = reverse('message-list')
-        response = self.client.get(url, format='vnd.api+json')
-        import pdb; pdb.set_trace()
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Message.objects.count(), 1)
+        response = self.client.get(url+'?filter[id.gt]=3&filter[id.lt]=5', format='vnd.api+json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for item in response.data['results']:
+            _id = item['id']
+            assert _id > 3 and _id < 5
 
     def test_fetch_only_new_messages(self):
         sender = USER_MODEL.objects.get(username='sender')
@@ -119,6 +120,16 @@ class MessageTests(APITestCase):
                 'pagination': OrderedDict([('page', 1), ('pages', 1), ('count', 1)])},
             'links': OrderedDict([('first', 'http://testserver/v1/messages/?filter%5Bseen%5D=false&page%5Bnumber%5D=1'), ('last', 'http://testserver/v1/messages/?filter%5Bseen%5D=false&page%5Bnumber%5D=1'), ('next', None), ('prev', None)])
         }
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, expected)
+
+    def test_fetch_only_seen_messages(self):
+        sender = USER_MODEL.objects.get(username='sender')
+        self.client.force_authenticate(user=sender)
+        response = self.create_message('dont care')
+        url = reverse('message-list')
+        response = self.client.get(url + f'?filter[seen]=true', format='vnd.api+json')
+        expected = {'results': [], 'meta': {'pagination': OrderedDict([('page', 1), ('pages', 1), ('count', 0)])}, 'links': OrderedDict([('first', 'http://testserver/v1/messages/?filter%5Bseen%5D=true&page%5Bnumber%5D=1'), ('last', 'http://testserver/v1/messages/?filter%5Bseen%5D=true&page%5Bnumber%5D=1'), ('next', None), ('prev', None)])}
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, expected)
 
@@ -158,24 +169,24 @@ class MessageTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_multiple_messages(self):
+        sender = USER_MODEL.objects.get(username='sender')
+        self.client.force_authenticate(user=sender)
+        response = self.create_message('dont care')
+        response = self.create_message('dont care')
+        response = self.create_message('dont care')
+        response = self.create_message('dont care')
+        response = self.create_message('dont care')
         url = reverse('message-list')
-        data = {'name': 'DabApps'}
-        response = self.client.post(url + '666/', data, format='vnd.api+json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Message.objects.count(), 1)
-        self.assertEqual(Message.objects.get().name, 'DabApps')
-        1/0
+        response = self.client.post(url + 'delete_many/?ids=1,2,3,4,5', format='vnd.api+json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Message.objects.count(), 0)
 
-    def test_delete_non_existing_multiple_messages_should_error(self):
+    def test_invalid_input_for_delete_many_should_error(self):
         sender = USER_MODEL.objects.get(username='sender')
         self.client.force_authenticate(user=sender)
         url = reverse('message-list')
-        data = {'name': 'DabApps'}
-        response = self.client.post(url, data, format='vnd.api+json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Message.objects.count(), 1)
-        self.assertEqual(Message.objects.get().name, 'DabApps')
-        1/0
+        response = self.client.post(url + 'delete_many/?ids=a,b,c', format='vnd.api+json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_set_message_as_seen(self):
         sender = USER_MODEL.objects.get(username='sender')
